@@ -16,7 +16,7 @@ function loadState(){
     const r = JSON.parse(localStorage.getItem(KEY));
     if(r && r.a) return r;
   }catch(e){}
-  return { a:null, items:{}, medals:[], love:0, qi:0, drive:'' };
+  return { a:PROFILE, items:{}, medals:[], love:0, qi:0 };
 }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
 
@@ -27,14 +27,18 @@ function st(id){
 const P  = () => buildProfile(S.a || {});
 const buzz = ms => { try{ navigator.vibrate && navigator.vibrate(ms); }catch(e){} };
 const nis = n => n.toLocaleString('he-IL');
-const driveUrl = () => (S.drive || '').trim();
+const driveUrl = () => DRIVE_FOLDER;
+
+const hist = id => HISTORY[id];
+/* סעיף שכבר טופל ואינו חוזר על עצמו — יורד מהרשימה של רוני */
+const closed = id => { const h = hist(id); return !!h && !h.again; };
 
 /* ───────── חישובים ───────── */
 function rel(item){
   if(!S.a) return {l:'maybe', why:''};
   try{ return item.rel(P()); }catch(e){ return {l:'maybe', why:''}; }
 }
-const live = () => CATALOG.filter(i => rel(i).l !== 'no');
+const live = () => CATALOG.filter(i => rel(i).l !== 'no' && !closed(i.id));
 
 function prog(i){
   const s = st(i.id);
@@ -195,7 +199,7 @@ function home(){
     }).forEach(i => h += card(i, c.hue));
   });
 
-  h += '<button class="btn ghost sm" id="redo" style="margin:24px 0 10px">לעדכן את הפרטים שלנו</button>';
+  h += '<button class="tiny" id="redo">אורי — לעדכן את פרטי השירות</button>';
   document.getElementById('home').innerHTML = '<div class="wrap">'+h+'</div>';
 
   document.querySelectorAll('#home [data-i]').forEach(e => e.onclick = () => openItem(e.dataset.i));
@@ -214,6 +218,9 @@ function card(i, hue){
     + '<div class="tag">'+i.tagline+'</div></div>'
     + '<div class="chip">'+(i.value ? nis(i.value)+' ₪' : 'לפי קבלה')+'</div></div>'
     + '<div class="flags">'
+    + (hist(i.id) ? '<span class="flag f-hist">'
+        + {ok:'✅ כבר אושר בעבר', no:'⛔ נדחה בעבר', sent:'📮 הוגש בעבר'}[hist(i.id).r]
+        + '</span>' : '')
     + (i.star && r.l==='yes' ? '<span class="flag f-star">⭐ שווה הכי הרבה</span>' : '')
     + '<span class="flag f-'+r.l+'">'+lbl+'</span>'
     + (r.why ? '<span class="flag f-no">'+r.why+'</span>' : '')
@@ -224,6 +231,16 @@ function card(i, hue){
         + '<span>'+STATUS.filter(x=>x.v===s.s)[0].l+'</span></div>'
       : '')
     + '</div>';
+}
+
+function histBox(id){
+  const h = hist(id);
+  const head = {ok:'✅ כבר הוגש ואושר', no:'⛔ הוגש ונדחה', sent:'📮 כבר הוגש'}[h.r];
+  return '<div class="hbox '+h.r+'">'
+    + '<b>'+head+(h.sum ? ' — '+nis(h.sum)+' ₪' : '')+'</b>'
+    + h.txt + '<span class="meta">פנייה ' + h.no + ' · ' + h.on
+    + (h.again ? ' · זכאות שנתית — אפשר להגיש שוב על 2026' : ' · חד-פעמי, אין מה להגיש שוב')
+    + '</span></div>';
 }
 
 function countUp(el, to){
@@ -258,10 +275,12 @@ function item(){
        + '. אם זה השתנה — אפשר לעדכן את הפרטים ולבדוק שוב.</div>'
      : '')
 
+  + (hist(i.id) ? histBox(i.id) : '')
+
   + '<div class="act">'
   + (driveUrl()
      ? '<a href="'+driveUrl()+'" target="_blank" rel="noopener">📎 לצרף קובץ</a>'
-     : '<a href="#" data-setup="1">📎 להגדיר תיקייה</a>')
+     : '')
   + '<a href="'+i.submit+'" target="_blank" rel="noopener" class="go">להגיש בקרן ←</a>'
   + '</div>'
 
@@ -297,10 +316,6 @@ function item(){
 
   document.getElementById('bk').onclick = () => { home(); show('home'); tab('home'); };
   document.querySelectorAll('#item [data-love]').forEach(e => e.onclick = loveSheet);
-  document.querySelectorAll('#item [data-setup]').forEach(e => e.onclick = ev => {
-    ev.preventDefault(); board(); show('board'); tab('board');
-    setTimeout(()=>{ const f=document.getElementById('drv'); if(f){ f.scrollIntoView({block:'center'}); f.focus(); } }, 120);
-  });
 
   document.querySelectorAll('#item [data-d]').forEach(function(el){
     function hit(){
@@ -362,19 +377,18 @@ function board(){
       : '<div class="row"><span>הכל נאסף. באמת. 👑</span></div>')
   + '</div>'
 
-  + '<div class="blk"><h4>תיקיית המסמכים</h4>'
-  + '<p style="font-size:13px;color:var(--dim);margin:0 0 12px">'
-  + 'כל קבלה, תלוש ואישור — לשם. פותחים תיקייה אחת בגוגל דרייב, מדביקים פה את הקישור, '
-  + 'וכפתור "לצרף קובץ" בכל סעיף יוביל אליה.</p>'
-  + '<input id="drv" class="fld" placeholder="https://drive.google.com/drive/folders/…" value="'
-  + (S.drive||'').replace(/"/g,'&quot;') + '">'
-  + (driveUrl()
-     ? '<a class="row" href="'+driveUrl()+'" target="_blank" rel="noopener" style="margin-top:6px">'
-       + '<span>📂 לפתוח את התיקייה</span>'
-       + '<b style="font-size:13px;color:var(--dim)">פתיחה ←</b></a>'
-     : '<p style="font-size:12px;color:var(--dimmer);margin:10px 0 0">'
-       + 'עוד לא הוגדרה תיקייה. עד שתוגדר, אפשר להשתמש בשדה ההערה בכל מסמך.</p>')
-  + '</div>'
+  + (CATALOG.filter(i=>closed(i.id)).length
+     ? '<div class="blk"><h4>מה שכבר סגור</h4>'
+       + '<p style="font-size:13px;color:var(--dim);margin:0 0 10px">'
+       + 'אלה ירדו מהרשימה — הם חד-פעמיים וכבר טופלו.</p>'
+       + CATALOG.filter(i=>closed(i.id)).map(function(i){
+           const h = hist(i.id);
+           return '<div class="row" data-i="'+i.id+'" style="cursor:pointer">'
+             + '<span>'+i.title+'<span class="sm">'+h.on+' · פנייה '+h.no+'</span></span>'
+             + '<b>'+(h.sum ? nis(h.sum)+' ₪' : {ok:'אושר',no:'נדחה',sent:'הוגש'}[h.r])+'</b></div>';
+         }).join('')
+       + '</div>'
+     : '')
 
   + '<div class="blk"><h4>הפרופיל שלנו</h4>'
   + (S.a
@@ -395,19 +409,13 @@ function board(){
   + '<input type="file" id="fl" accept=".json" hidden>'
 
   + '<p class="note">הכל נשמר על המכשיר הזה בלבד ולא עולה לשום שרת. '
-  + 'הקבצים עצמם — בתיקיית הגוגל דרייב שהגדרתם.<br><br>'
+  + 'הקבצים עצמם — בתיקיית הגוגל דרייב המשותפת.<br><br>'
   + '<b style="color:var(--dim)">המקורות:</b> תקנון קרן הסיוע 2026 (26/04/2026) והוראת המעבר שלו, '
   + 'ותקנון 2025 (23/07/2025). שניהם שמורים בתיקיית הפרויקט, ולכל סעיף רשום מספרו בתקנון.</p>'
   + '<div style="height:14px"></div></div>';
 
   document.getElementById('board').innerHTML = h;
   document.querySelectorAll('#board [data-i]').forEach(e=>e.onclick=()=>openItem(e.dataset.i));
-  const drv = document.getElementById('drv');
-  if(drv) drv.onchange = drv.onblur = function(){
-    const v = drv.value.trim();
-    if(v && !/^https:\/\/(drive|docs)\.google\.com\//.test(v)) return toast('זה לא נראה כמו קישור לתיקיית דרייב');
-    S.drive = v; save(); board(); if(v) toast('התיקייה נשמרה ✓');
-  };
   document.getElementById('exp').onclick = shareText;
   document.getElementById('bak').onclick = backup;
   document.getElementById('rst').onclick = ()=>document.getElementById('fl').click();
