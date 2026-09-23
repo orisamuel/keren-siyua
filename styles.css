@@ -378,6 +378,14 @@ h1,h2,h3{margin:0;font-weight:800;letter-spacing:-.4px}
 }
 #toast.on{opacity:1;transform:none}
 
+/* field */
+.fld{
+  width:100%;background:rgba(0,0,0,.26);border:1px solid var(--stroke);
+  border-radius:12px;color:var(--txt);padding:13px 14px;font-size:14px;direction:ltr;text-align:left
+}
+.fld:focus{outline:0;border-color:var(--peach)}
+.fld::placeholder{color:var(--dimmer)}
+
 /* misc */
 .row{display:flex;justify-content:space-between;align-items:center;gap:12px;
   padding:13px 0;border-bottom:1px solid var(--stroke);font-size:14px}

@@ -16,7 +16,7 @@ function loadState(){
     const r = JSON.parse(localStorage.getItem(KEY));
     if(r && r.a) return r;
   }catch(e){}
-  return { a:null, items:{}, medals:[], love:0, qi:0 };
+  return { a:null, items:{}, medals:[], love:0, qi:0, drive:'' };
 }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
 
@@ -27,6 +27,7 @@ function st(id){
 const P  = () => buildProfile(S.a || {});
 const buzz = ms => { try{ navigator.vibrate && navigator.vibrate(ms); }catch(e){} };
 const nis = n => n.toLocaleString('he-IL');
+const driveUrl = () => (S.drive || '').trim();
 
 /* ───────── חישובים ───────── */
 function rel(item){
@@ -258,7 +259,9 @@ function item(){
      : '')
 
   + '<div class="act">'
-  + '<a href="'+c.drive+'" target="_blank" rel="noopener">📎 לצרף קובץ</a>'
+  + (driveUrl()
+     ? '<a href="'+driveUrl()+'" target="_blank" rel="noopener">📎 לצרף קובץ</a>'
+     : '<a href="#" data-setup="1">📎 להגדיר תיקייה</a>')
   + '<a href="'+i.submit+'" target="_blank" rel="noopener" class="go">להגיש בקרן ←</a>'
   + '</div>'
 
@@ -294,6 +297,10 @@ function item(){
 
   document.getElementById('bk').onclick = () => { home(); show('home'); tab('home'); };
   document.querySelectorAll('#item [data-love]').forEach(e => e.onclick = loveSheet);
+  document.querySelectorAll('#item [data-setup]').forEach(e => e.onclick = ev => {
+    ev.preventDefault(); board(); show('board'); tab('board');
+    setTimeout(()=>{ const f=document.getElementById('drv'); if(f){ f.scrollIntoView({block:'center'}); f.focus(); } }, 120);
+  });
 
   document.querySelectorAll('#item [data-d]').forEach(function(el){
     function hit(){
@@ -327,16 +334,6 @@ function item(){
 }
 
 /* ═══════════════════ מצב ═══════════════════ */
-const FOLDERS = [
-  ['base','אישורי שירות ומסמכי בסיס','📁'],
-  ['family','המשפחה והבית','🏠'],
-  ['money','הכנסה ומענקים','💸'],
-  ['care','טיפולים ורווחה','🌿'],
-  ['stuff','ציוד, רכב והוצאות','🎒'],
-  ['study','לימודים','🎓'],
-  ['done','הוגש — אישורים מהקרן','✅']
-];
-
 function board(){
   const L = live(), s = stats();
   const missing = L.filter(function(i){ const p = prog(i); return p.done < p.total; })
@@ -365,12 +362,18 @@ function board(){
       : '<div class="row"><span>הכל נאסף. באמת. 👑</span></div>')
   + '</div>'
 
-  + '<div class="blk"><h4>התיקיות של המסמכים</h4>'
+  + '<div class="blk"><h4>תיקיית המסמכים</h4>'
   + '<p style="font-size:13px;color:var(--dim);margin:0 0 12px">'
-  + 'כל קובץ שאת מצלמת — לשם. הכל בגוגל דרייב, נשמר אוטומטית, ונגיש לשניכם.</p>'
-  + FOLDERS.map(f=>'<a class="row" href="'+DRIVE[f[0]]+'" target="_blank" rel="noopener">'
-      + '<span>'+f[2]+' '+f[1]+'</span>'
-      + '<b style="font-size:13px;color:var(--dim)">פתיחה ←</b></a>').join('')
+  + 'כל קבלה, תלוש ואישור — לשם. פותחים תיקייה אחת בגוגל דרייב, מדביקים פה את הקישור, '
+  + 'וכפתור "לצרף קובץ" בכל סעיף יוביל אליה.</p>'
+  + '<input id="drv" class="fld" placeholder="https://drive.google.com/drive/folders/…" value="'
+  + (S.drive||'').replace(/"/g,'&quot;') + '">'
+  + (driveUrl()
+     ? '<a class="row" href="'+driveUrl()+'" target="_blank" rel="noopener" style="margin-top:6px">'
+       + '<span>📂 לפתוח את התיקייה</span>'
+       + '<b style="font-size:13px;color:var(--dim)">פתיחה ←</b></a>'
+     : '<p style="font-size:12px;color:var(--dimmer);margin:10px 0 0">'
+       + 'עוד לא הוגדרה תיקייה. עד שתוגדר, אפשר להשתמש בשדה ההערה בכל מסמך.</p>')
   + '</div>'
 
   + '<div class="blk"><h4>הפרופיל שלנו</h4>'
@@ -392,13 +395,19 @@ function board(){
   + '<input type="file" id="fl" accept=".json" hidden>'
 
   + '<p class="note">הכל נשמר על המכשיר הזה בלבד ולא עולה לשום שרת. '
-  + 'הקבצים עצמם — בגוגל דרייב של '+HIM+'.<br><br>'
+  + 'הקבצים עצמם — בתיקיית הגוגל דרייב שהגדרתם.<br><br>'
   + '<b style="color:var(--dim)">המקורות:</b> תקנון קרן הסיוע 2026 (26/04/2026) והוראת המעבר שלו, '
   + 'ותקנון 2025 (23/07/2025). שניהם שמורים בתיקיית הפרויקט, ולכל סעיף רשום מספרו בתקנון.</p>'
   + '<div style="height:14px"></div></div>';
 
   document.getElementById('board').innerHTML = h;
   document.querySelectorAll('#board [data-i]').forEach(e=>e.onclick=()=>openItem(e.dataset.i));
+  const drv = document.getElementById('drv');
+  if(drv) drv.onchange = drv.onblur = function(){
+    const v = drv.value.trim();
+    if(v && !/^https:\/\/(drive|docs)\.google\.com\//.test(v)) return toast('זה לא נראה כמו קישור לתיקיית דרייב');
+    S.drive = v; save(); board(); if(v) toast('התיקייה נשמרה ✓');
+  };
   document.getElementById('exp').onclick = shareText;
   document.getElementById('bak').onclick = backup;
   document.getElementById('rst').onclick = ()=>document.getElementById('fl').click();

@@ -28,26 +28,19 @@ const SUBMIT = {
 };
 const WHATSAPP_KEREN = '972523964584';   // מוקד קרן הסיוע, א׳–ה׳ 08:00–15:00
 
-/* ===== תיקיות Google Drive (נוצרו 23/09/2026) ===== */
-const DRIVE = {
-  root:   'https://drive.google.com/drive/folders/1ykSI_eblUyNjuN2NfeJLl9bXdrXt2Ck4',
-  base:   'https://drive.google.com/drive/folders/1t86l64YfcMwxml_3K1h_dPxoIrR62OAz',
-  family: 'https://drive.google.com/drive/folders/1-k5iZFwCwhP11YpUOr-M3NYEH3GkzJwk',
-  money:  'https://drive.google.com/drive/folders/1cjaMhxBqNWJyg3PD_AN4upWMMauTSHNF',
-  care:   'https://drive.google.com/drive/folders/1IMmAy3B-QT7dgnjHa4wVfsNcBMYixXuo',
-  stuff:  'https://drive.google.com/drive/folders/17HmXPS_Keqxjq3WKgfM7hHdUkX21oyME',
-  study:  'https://drive.google.com/drive/folders/1VvyD7yRxHT3OxJqpNf2UT0nGWxP-o5J-',
-  done:   'https://drive.google.com/drive/folders/1ByYfp-wFhMk2aiWXTI1JzUF8lnqCixGA'
-};
+/* ===== תיקיית Google Drive =====
+   לא מקודדת בקוד. נקבעת פעם אחת במסך ההגדרות ונשמרת על המכשיר,
+   כדי שאפשר יהיה להחליף חשבון גוגל בלי לגעת בקוד. */
+const DRIVE_HELP = 'https://drive.google.com';
 
 const DEADLINE = { date: '31/12/2026', iso: '2026-12-31' };
 
 const CATEGORIES = {
-  family: { name: 'המשפחה והבית',      icon: '🏠', drive: DRIVE.family, hue: 14  },
-  money:  { name: 'הכנסה ומענקים',     icon: '💸', drive: DRIVE.money,  hue: 150 },
-  care:   { name: 'טיפולים ורווחה',    icon: '🌿', drive: DRIVE.care,   hue: 275 },
-  stuff:  { name: 'ציוד, רכב והוצאות', icon: '🎒', drive: DRIVE.stuff,  hue: 205 },
-  study:  { name: 'לימודים',           icon: '🎓', drive: DRIVE.study,  hue: 45  }
+  family: { name: 'המשפחה והבית',      icon: '🏠', hue: 14  },
+  money:  { name: 'הכנסה ומענקים',     icon: '💸',  hue: 150 },
+  care:   { name: 'טיפולים ורווחה',    icon: '🌿',   hue: 275 },
+  stuff:  { name: 'ציוד, רכב והוצאות', icon: '🎒',  hue: 205 },
+  study:  { name: 'לימודים',           icon: '🎓',  hue: 45  }
 };
 
 /* ============================================================ */
