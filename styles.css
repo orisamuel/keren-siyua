@@ -128,6 +128,16 @@ h1,h2,h3{margin:0;font-weight:800;letter-spacing:-.4px}
 .dl .big{font-family:'Secular One',sans-serif;font-size:19px;color:var(--rose);line-height:1}
 .dl .em{color:var(--rose);font-weight:700}
 
+/* facts */
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:16px}
+.facts .f{
+  background:var(--glass);border:1px solid var(--stroke);border-radius:var(--rs);
+  padding:12px 8px;text-align:center
+}
+.facts .f b{display:block;font-family:'Secular One',sans-serif;font-size:17px;
+  letter-spacing:-.5px;color:var(--mint)}
+.facts .f span{font-size:9.5px;color:var(--dimmer);font-weight:600;line-height:1.25;display:block;margin-top:2px}
+
 /* ═══════════════ MEDALS ═══════════════ */
 .medals{display:flex;gap:8px;overflow-x:auto;padding:4px 0 2px;margin-top:16px;scrollbar-width:none}
 .medals::-webkit-scrollbar{display:none}

@@ -175,6 +175,12 @@ function home(){
       + '<div class="c">'+m.icon+'</div><span>'+m.name+'</span></div>').join('')
   + '</div>'
 
+  + '<div class="facts">'
+  + '<div class="f"><b>'+nis(FUND_PAID)+' ₪</b><span>כבר חזרו אליכם מהקרן</span></div>'
+  + '<div class="f"><b>'+(SERVICE.days[2024]+SERVICE.days[2025])+'</b><span>ימי שמ"פ ב-2024–2025</span></div>'
+  + '<div class="f"><b>'+SERVICE.days[2026]+'</b><span>ימי שמ"פ ב-2026</span></div>'
+  + '</div>'
+
   + '<div class="dl"><div class="big">31.12</div>'
   + '<div><span class="em">המועד האחרון להגשה</span> על תקופת זכאות שבין 7/10/23 ל-31/12/25. '
   + 'אחרי זה הכסף הזה פשוט לא קיים.</div></div>'
@@ -389,6 +395,14 @@ function board(){
          }).join('')
        + '</div>'
      : '')
+
+  + '<div class="blk"><h4>מה שכבר קיבלנו מהקרן</h4>'
+  + Object.keys(SERVICE.fund).sort().reverse().map(y=>'<div class="row"><span>'+y
+      + '<span class="sm">'+SERVICE.days[y]+' ימי שמ"פ</span></span>'
+      + '<b>'+nis(SERVICE.fund[y])+' ₪</b></div>').join('')
+  + '<div class="row"><span><b style="font-family:Rubik;color:var(--txt);font-size:14px">סה"כ</b></span>'
+  + '<b>'+nis(FUND_PAID)+' ₪</b></div>'
+  + '</div>'
 
   + '<div class="blk"><h4>הפרופיל שלנו</h4>'
   + (S.a

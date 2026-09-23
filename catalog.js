@@ -230,7 +230,7 @@ const CATALOG = [
   ],
   rel:p=>{
     if(!p.kidsUnder14) return {l:'no', why:'הקריטריונים דורשים ילד עד 14 (או צרכים מיוחדים עד 21)'};
-    if(p.spouse==='no') return {l:'maybe', why:'בלי הכנסה שנפגעה — ראי את המענק לבן/בת זוג שאינו עובד'};
+    if(p.spouse==='no') return {l:'maybe', why:'בלי הכנסה שנפגעה — ראי את המענק לבת זוג שאינה עובדת'};
     return {l:'yes', why:''};
   }
 },
@@ -288,7 +288,7 @@ const CATALOG = [
   rel:p=>{
     if(!p.kidsUnder14) return {l:'no', why:'דורש ילד משותף מתחת ל-14'};
     if(p.spouse==='yes') return {l:'no', why:'מיועד למי שלא עבדה 21 ימים בתקופת השירות'};
-    return {l:'maybe', why:'תלוי ב-45 ימי שירות ברצף ו-21 ימים בלי עבודה ובלי אבטלה'};
+    return {l:'maybe', why:'תלוי ב-21 ימים בלי עבודה ובלי אבטלה בתקופת השירות'};
   }
 },
 {
@@ -331,7 +331,7 @@ const CATALOG = [
     'ℹ️ ביטול ימי שמ"פ בדיעבד לא ייצור חוב'
   ],
   rel:p=>{
-    if(p.spouse!=='self') return {l:'no', why:'מיועד לבת זוג עצמאית'};
+    if(p.spouse && p.spouse!=='self') return {l:'no', why:'מיועד לבת זוג עצמאית'};
     if(!p.days120Lohem) return {l:'no', why:'דורש 120 ימים במערך הלוחם'};
     return {l:'maybe', why:'תלוי בפיצוי קודם על ירידת מחזורים'};
   }
@@ -664,14 +664,24 @@ const QUESTIONS = [
    רוני לא ממלאת שאלון. אם משהו משתנה — משנים כאן שורה אחת.
    ============================================================ */
 const PROFILE = {
-  madreg:   '?',    // עדיין לא ידוע — לא מופיע באזור האישי
-  days:     45,     // רצפה מוכחת: מענק חל"ד אושר, ומחייב 45 ימים רצופים
-  lohem:    '?',    // עדיין לא ידוע
-  streak10: 'yes',  // אושרו החזרי תקלות בית ובייביסיטר ⇒ הסף נחצה
+  madreg:   'א+',   // מאורי, 23/09/2026
+  days:     240,    // 110 ימים ב-2024 + 179 ב-2025 = 289, ועוד חלק מ-2023
+  lohem:    '?',    // לא מופיע באזור האישי — הנתון האחרון שחסר
+  streak10: 'yes',  // 179 ו-110 ימים בשנה ⇒ הסף נחצה בוודאות
   kids:     'u14',  // אושרו בייביסיטר, קייטנות ומענק חל"ד
-  spouse:   'yes',
+  spouse:   '?',    // לא נמסר — הסעיפים התלויים בזה מסומנים "לבדוק"
   extras:   ['birth']
 };
+
+/* נתוני השירות בפועל, מהאזור האישי · 23/09/2026 */
+const SERVICE = {
+  volunteerSince: '07.10.23',
+  type: 'מילואים מתנדבים',
+  endsOn: '31.12.2026',
+  days: { 2026: 80, 2025: 179, 2024: 110 },
+  fund: { 2026: 2650, 2025: 14168, 2024: 1983 }   // מה שקרן הסיוע כבר שילמה
+};
+const FUND_PAID = Object.values(SERVICE.fund).reduce((a,b)=>a+b, 0);
 
 function buildProfile(a){
   const ex = a.extras || [];
@@ -682,7 +692,7 @@ function buildProfile(a){
     streak10: a.streak10==='no' ? false : (a.streak10==='yes' ? true : null),
     kidsUnder14: a.kids==='u14' || a.kids==='spec',
     anyKids: a.kids && a.kids !== 'none',
-    spouse: a.spouse==='leave' ? 'no' : a.spouse,
+    spouse: a.spouse==='?' ? null : (a.spouse==='leave' ? 'no' : a.spouse),
     moved: ex.includes('moved'),
     birth: ex.includes('birth') || a.spouse==='leave',
     pet: ex.includes('pet'),
