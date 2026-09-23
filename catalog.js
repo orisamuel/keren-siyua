@@ -31,7 +31,7 @@ const WHATSAPP_KEREN = '972523964584';   // מוקד קרן הסיוע, א׳–�
 /* ===== תיקיית Google Drive =====
    קישור אחד. אורי מדביק אותו כאן פעם אחת — רוני לא נוגעת בשום הגדרה.
    כשהוא ריק, כפתור "לצרף קובץ" פשוט לא מופיע. */
-const DRIVE_FOLDER = '';
+const DRIVE_FOLDER = 'https://drive.google.com/drive/folders/18pkmn87xx_dNLtVF7SxHmNxt23oxLmIG?usp=sharing';
 
 const DEADLINE = { date: '31/12/2026', iso: '2026-12-31' };
 
@@ -666,10 +666,10 @@ const QUESTIONS = [
 const PROFILE = {
   madreg:   'א+',   // מאורי, 23/09/2026
   days:     240,    // 110 ימים ב-2024 + 179 ב-2025 = 289, ועוד חלק מ-2023
-  lohem:    '?',    // לא מופיע באזור האישי — הנתון האחרון שחסר
+  lohem:    'yes',  // מאורי, 23/09/2026
   streak10: 'yes',  // 179 ו-110 ימים בשנה ⇒ הסף נחצה בוודאות
   kids:     'u14',  // אושרו בייביסיטר, קייטנות ומענק חל"ד
-  spouse:   '?',    // לא נמסר — הסעיפים התלויים בזה מסומנים "לבדוק"
+  spouse:   'yes',  // רוני שכירה — מאורי, 23/09/2026
   extras:   ['birth']
 };
 
