@@ -239,6 +239,24 @@ function card(i, hue){
     + '</div>';
 }
 
+let _urls = [];
+function revokeUrls(){ _urls.forEach(u=>URL.revokeObjectURL(u)); _urls = []; }
+
+function fileRow(iid, did){
+  const f = fileInfo(iid, did);
+  if(!f){
+    return '<label class="add"><input type="file" data-f="'+did+'" hidden '
+      + 'accept="image/*,application/pdf,.heic">'
+      + '<span>＋</span> לצלם או לבחור מסמך</label>';
+  }
+  const img = /^image\//.test(f.type);
+  return '<div class="file">'
+    + '<div class="thumb" data-thumb="'+did+'">'+(img ? '' : '📄')+'</div>'
+    + '<div class="fmeta"><b>'+f.name+'</b><span>'+kb(f.size)+'</span></div>'
+    + '<button class="fx-del" data-del="'+did+'" aria-label="להסיר">✕</button>'
+    + '</div>';
+}
+
 function histBox(id){
   const h = hist(id);
   const head = {ok:'✅ כבר הוגש ואושר', no:'⛔ הוגש ונדחה', sent:'📮 כבר הוגש'}[h.r];
@@ -284,9 +302,7 @@ function item(){
   + (hist(i.id) ? histBox(i.id) : '')
 
   + '<div class="act">'
-  + (driveUrl()
-     ? '<a href="'+driveUrl()+'" target="_blank" rel="noopener">📎 לצרף קובץ</a>'
-     : '')
+  + '<button data-share="'+i.id+'">📤 לשלוח ל'+HIM+'</button>'
   + '<a href="'+i.submit+'" target="_blank" rel="noopener" class="go">להגיש בקרן ←</a>'
   + '</div>'
 
@@ -304,7 +320,8 @@ function item(){
       + '<div class="cb">✓</div><div class="db">'
       + '<div class="l">'+d.label+'</div>'
       + (d.hint ? '<div class="h">'+d.hint+'</div>' : '')
-      + '<textarea data-n="'+d.id+'" placeholder="איפה זה? קישור, שם קובץ, הערה…">'
+      + fileRow(i.id, d.id)
+      + '<textarea data-n="'+d.id+'" placeholder="הערה — לא חובה">'
       + (s.n[d.id]||'') + '</textarea></div></div>').join('')
   + '</div>'
 
@@ -326,6 +343,7 @@ function item(){
   document.querySelectorAll('#item [data-d]').forEach(function(el){
     function hit(){
       const k = el.dataset.d;
+      if(hasFile(i.id, k) && s.d[k]) return;
       s.d[k] = !s.d[k];
       buzz(s.d[k] ? 14 : 6);
       if(s.s==='todo' && s.d[k]) s.s = 'coll';
@@ -338,6 +356,42 @@ function item(){
     }
     el.querySelector('.cb').onclick = hit;
     el.querySelector('.l').onclick  = hit;
+  });
+
+  document.querySelectorAll('#item [data-f]').forEach(function(inp){
+    inp.onchange = async function(){
+      const f = inp.files && inp.files[0];
+      if(!f) return;
+      if(f.size > 25*1024*1024) return toast('הקובץ גדול מדי — עד 25MB');
+      try{
+        await putFile(i.id, inp.dataset.f, f);
+        s.d[inp.dataset.f] = true;
+        if(s.s==='todo') s.s = 'coll';
+        const np = prog(i);
+        if(np.total && np.done===np.total && s.s!=='sent' && s.s!=='paid'){
+          s.s = 'ready'; confetti(70); toast('הסעיף הזה מוכן להגשה 🎉');
+        }else{ buzz(14); toast('המסמך נשמר ✓'); }
+        save(); item();
+      }catch(e){ toast('לא הצלחתי לשמור את הקובץ'); }
+    };
+  });
+  document.querySelectorAll('#item [data-del]').forEach(function(b){
+    b.onclick = async function(e){
+      e.stopPropagation();
+      await delFile(i.id, b.dataset.del);
+      s.d[b.dataset.del] = false; save(); item(); toast('המסמך הוסר');
+    };
+  });
+  document.querySelectorAll('#item [data-share]').forEach(function(b){
+    b.onclick = function(){ shareFiles(b.dataset.share, 'קרן הסיוע — ' + i.title); };
+  });
+  revokeUrls();
+  document.querySelectorAll('#item [data-thumb]').forEach(async function(el){
+    const rec = await getFile(i.id, el.dataset.thumb);
+    if(rec && /^image\//.test(rec.type)){
+      const u = URL.createObjectURL(rec.blob); _urls.push(u);
+      el.style.backgroundImage = 'url('+u+')';
+    }
   });
 
   document.querySelectorAll('#item [data-n]').forEach(function(t){
@@ -414,22 +468,33 @@ function board(){
      : '')
   + '</div>'
 
-  + '<button class="btn" id="exp">לשלוח ל'+HIM+' את מצב האיסוף</button>'
+  + '<div class="blk"><h4>המסמכים שאספנו</h4>'
+  + '<div class="row"><span>קבצים שמורים על המכשיר</span><b>'+fileCount()+'</b></div>'
+  + '<p style="font-size:12.5px;color:var(--dim);margin:12px 0 0">'
+  + 'הקבצים נשמרים רק כאן, בטלפון. "לשלוח הכל" פותח את תפריט השיתוף — '
+  + 'וואטסאפ, מייל או דרייב, מה שנוח.</p>'
+  + '</div>'
+
+  + '<button class="btn" id="sendall">📤 לשלוח ל'+HIM+' את כל המסמכים</button>'
+  + '<button class="btn ghost sm" id="exp">לשלוח את מצב האיסוף (טקסט)</button>'
   + '<a class="btn ghost sm" style="display:block;text-align:center" '
   + 'href="https://wa.me/'+WHATSAPP_KEREN+'" target="_blank" rel="noopener">'
   + 'לשאול את מוקד קרן הסיוע בוואטסאפ</a>'
+  + (driveUrl() ? '<a class="btn ghost sm" style="display:block;text-align:center" '
+      + 'href="'+driveUrl()+'" target="_blank" rel="noopener">התיקייה בגוגל דרייב</a>' : '')
   + '<button class="btn ghost sm" id="bak">גיבוי הנתונים לקובץ</button>'
   + '<button class="btn ghost sm" id="rst">לטעון גיבוי</button>'
   + '<input type="file" id="fl" accept=".json" hidden>'
 
   + '<p class="note">הכל נשמר על המכשיר הזה בלבד ולא עולה לשום שרת. '
-  + 'הקבצים עצמם — בתיקיית הגוגל דרייב המשותפת.<br><br>'
+  + 'גם המסמכים עצמם נשמרים על המכשיר, ולא מועלים לשום מקום עד שאת שולחת אותם.<br><br>'
   + '<b style="color:var(--dim)">המקורות:</b> תקנון קרן הסיוע 2026 (26/04/2026) והוראת המעבר שלו, '
   + 'ותקנון 2025 (23/07/2025). שניהם שמורים בתיקיית הפרויקט, ולכל סעיף רשום מספרו בתקנון.</p>'
   + '<div style="height:14px"></div></div>';
 
   document.getElementById('board').innerHTML = h;
   document.querySelectorAll('#board [data-i]').forEach(e=>e.onclick=()=>openItem(e.dataset.i));
+  document.getElementById('sendall').onclick = function(){ shareFiles(null, 'קרן הסיוע — כל המסמכים'); };
   document.getElementById('exp').onclick = shareText;
   document.getElementById('bak').onclick = backup;
   document.getElementById('rst').onclick = ()=>document.getElementById('fl').click();
@@ -555,5 +620,7 @@ document.querySelectorAll('.nav button').forEach(function(b){
   };
 });
 
-if(S.a){ A = Object.assign({}, S.a); home(); show('home'); tab('home'); }
-else   { S.qi = 0; quiz(); show('quiz'); }
+loadFileIndex().then(function(){
+  if(S.a){ A = Object.assign({}, S.a); home(); show('home'); tab('home'); }
+  else   { S.qi = 0; quiz(); show('quiz'); }
+});
