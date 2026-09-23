@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0B0711">
+<meta name="description" content="כל מה שמגיע לנו מקרן הסיוע למשרתי המילואים — במקום אחד.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="קרן הסיוע">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💛</text></svg>">
+<title>קרן הסיוע</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<section class="screen" id="quiz"><div class="qw" id="q"></div></section>
+<section class="screen" id="home"></section>
+<section class="screen" id="item"></section>
+<section class="screen" id="board"></section>
+
+<nav class="nav">
+  <button data-t="home" class="on"><i>✦</i>הסעיפים</button>
+  <button data-t="board"><i>◉</i>איפה אנחנו</button>
+  <button data-t="love" class="love"><i>💛</i>לאורי</button>
+</nav>
+
+<div class="sheet" id="sheet"></div>
+<div id="fx"></div>
+<div id="toast"></div>
+
+<script src="catalog.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
